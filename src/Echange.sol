@@ -88,4 +88,32 @@ contract Exchange is ERC20 {
 
         return (ethToReturn, tokenToReturn);
     }
+
+    // getOutputAmountFromSwap calculates the amount of output tokens to be received based on xy = (x + dx)(y - dy)
+    function getOutputAmountFromSwap(
+        uint256 inputAmount,
+        uint256 inputReserve,
+        uint256 outputReserve
+    ) public pure returns (uint256) {
+        require(
+            inputReserve > 0 && outputReserve > 0,
+            "Reserves must be greater than 0"
+        );
+
+        uint256 inputAmountwithFee = inputAmount * 99;
+
+        uint256 numerator = inputAmountwithFee * outputReserve;
+        uint256 denominator = (inputReserve * 100) + inputAmountwithFee;
+
+        return numerator / denominator;
+    }
+
+    function ethToTokenSwap(uint256 minTOkensToReceive) public payable {
+        uint256 tokenReserveBalance = getReserve();
+        uint256 minTOkensToReceive = getOutputAmountFromSwap(
+            msg.value,
+            address(this).balance - msg.value,
+            tokenReserveBalance
+        );
+    }
 }
